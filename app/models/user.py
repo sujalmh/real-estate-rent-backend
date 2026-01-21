@@ -1,7 +1,7 @@
 """User model definition."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 
 from sqlalchemy import String, Boolean, ARRAY, TIMESTAMP, Text
@@ -38,14 +38,17 @@ class User(Base):
     )  # active, suspended, banned
     privacy_settings: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
     failed_login_attempts: Mapped[int] = mapped_column(default=0)
-    locked_until: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
+    locked_until: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False
+        TIMESTAMP(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        TIMESTAMP(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
-    last_login_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
+    last_login_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True), nullable=True)
 
     # Relationships
     listings = relationship("Listing", back_populates="owner", lazy="dynamic")
