@@ -1,7 +1,7 @@
 """Supporting models: Bookmark, Report, Lead, SavedSearch."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Optional
 
 from sqlalchemy import String, Boolean, Text, TIMESTAMP, ForeignKey
@@ -23,7 +23,7 @@ class Bookmark(Base):
         UUID(as_uuid=True), ForeignKey("listings.id", ondelete="CASCADE"), primary_key=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False
     )
 
 
@@ -56,7 +56,7 @@ class Report(Base):
         String(50), nullable=True
     )  # remove_listing, warn_owner, ban_owner, no_action
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False
     )
 
 
@@ -84,10 +84,10 @@ class Lead(Base):
         String(30), default="new", index=True
     )  # new, contacted, viewing_scheduled, closed_won, closed_lost
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), onupdate=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False
     )
 
 
@@ -108,7 +108,7 @@ class SavedSearch(Base):
         String(20), default="instant"
     )  # instant, daily, weekly
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False
     )
 
 
@@ -127,7 +127,7 @@ class ViewHistory(Base):
         UUID(as_uuid=True), ForeignKey("listings.id", ondelete="CASCADE"), nullable=False
     )
     viewed_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False
     )
 
 
@@ -143,5 +143,5 @@ class UserBlock(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
     )
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False
     )

@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     s3_secret_key: str = "minioadmin"
     s3_bucket_name: str = "real-estate-media"
 
+    # Google Maps
+    google_maps_api_key: str = ""
+
     # App Settings
     debug: bool = True
     environment: str = "development"

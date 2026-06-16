@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, List
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 
 
 class UserBase(BaseModel):
@@ -37,6 +37,8 @@ class UserCreate(UserBase):
             raise ValueError("Password must contain at least one special character")
         return v
 
+    role: str = Field("seeker", pattern="^(seeker|owner|agent)$")
+
 
 class UserUpdate(BaseModel):
     """Schema for updating user profile."""
@@ -64,7 +66,7 @@ class UserResponse(BaseModel):
     updated_at: datetime
     privacy_settings: Optional[dict] = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserProfileResponse(BaseModel):
@@ -81,7 +83,7 @@ class UserProfileResponse(BaseModel):
     phone: Optional[str] = None
     created_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PrivacySettings(BaseModel):

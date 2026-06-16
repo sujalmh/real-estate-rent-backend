@@ -33,9 +33,12 @@ async def engine():
 @pytest_asyncio.fixture(scope="function")
 async def db_session(engine) -> AsyncGenerator[AsyncSession, None]:
     """Create a fresh database session for each test."""
+    from sqlalchemy import text
+    
     # Create all tables
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis"))
         await conn.run_sync(Base.metadata.create_all)
 
     # Create session
@@ -63,3 +66,26 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def admin_user(db_session: AsyncSession):
+    """Create an admin user for testing."""
+    from app.models.user import User
+    from app.core.security import hash_password
+    
+    admin = User(
+        email="admin@realestate.com",
+        phone="+919999999999",
+        password_hash=hash_password("Admin@123"),
+        name="Platform Administrator",
+        roles=["admin", "seeker"],
+        verified=True,
+        status="active"
+    )
+    
+    db_session.add(admin)
+    await db_session.commit()
+    await db_session.refresh(admin)
+    
+    return admin

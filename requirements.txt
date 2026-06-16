@@ -9,6 +9,8 @@ python-multipart>=0.0.6
 asyncpg>=0.29.0
 sqlalchemy[asyncio]>=2.0.25
 alembic>=1.13.0
+GeoAlchemy2>=0.14.0
+shapely>=2.0.0
 greenlet>=3.0.0
 
 # Authentication

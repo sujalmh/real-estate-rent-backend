@@ -61,7 +61,7 @@ async def register_user(
         phone=user_data.phone,
         password_hash=password_hash,
         name=user_data.name,
-        roles=["seeker"],  # Default role
+        roles=[user_data.role],
         verified=False,
         status="active",
     )
@@ -259,3 +259,87 @@ async def remove_user_role(
         )
 
     return {"message": f"Role '{role}' removed from user", "roles": target_user.roles}
+
+
+@router.post("/request-owner-role", response_model=UserResponse)
+async def request_owner_role(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """
+    Request to become an owner (add 'owner' to roles).
+    """
+    if "owner" in current_user.roles:
+        return current_user
+
+    # Create a new list to ensure SQLAlchemy detects the change
+    new_roles = list(current_user.roles)
+    new_roles.append("owner")
+    current_user.roles = new_roles
+    
+    db.add(current_user)
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
+
+
+@router.post("/{user_id}/verify", response_model=UserResponse)
+async def verify_user(
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """
+    Verify a user (Admin only).
+    """
+    if "admin" not in current_user.roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can verify users",
+        )
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    target_user = result.scalar_one_or_none()
+    
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    target_user.verified = True
+    db.add(target_user)
+    await db.commit()
+    await db.refresh(target_user)
+    return target_user
+
+
+@router.post("/{user_id}/unverify", response_model=UserResponse)
+async def unverify_user(
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    """
+    Unverify a user (Admin only).
+    """
+    if "admin" not in current_user.roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can unverify users",
+        )
+
+    result = await db.execute(select(User).where(User.id == user_id))
+    target_user = result.scalar_one_or_none()
+
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    target_user.verified = False
+    db.add(target_user)
+    await db.commit()
+    await db.refresh(target_user)
+    return target_user

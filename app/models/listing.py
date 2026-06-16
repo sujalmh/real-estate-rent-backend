@@ -1,12 +1,13 @@
 """Listing model definition."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Optional, List
 
 from sqlalchemy import String, Boolean, Integer, Float, Text, ARRAY, TIMESTAMP, DECIMAL, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from geoalchemy2 import Geography
 
 from app.database import Base
 
@@ -41,6 +42,8 @@ class Listing(Base):
     postal_code: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     latitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     longitude: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    # PostGIS geography point for spatial queries (auto-synced via trigger)
+    location = mapped_column(Geography(geometry_type='POINT', srid=4326), nullable=True)
     
     # Property details
     size: Mapped[Optional[float]] = mapped_column(DECIMAL(10, 2), nullable=True)  # sq ft
@@ -67,10 +70,10 @@ class Listing(Base):
     # Timestamps
     expires_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False, index=True
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False, index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), onupdate=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False
     )
 
     # Relationships

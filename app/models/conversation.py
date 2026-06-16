@@ -1,7 +1,7 @@
 """Conversation and Message models."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Optional, List
 
 from sqlalchemy import String, Text, ARRAY, TIMESTAMP, ForeignKey
@@ -27,7 +27,7 @@ class Conversation(Base):
     )
     last_message_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False
     )
 
     # Relationships
@@ -55,7 +55,7 @@ class Message(Base):
     content: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     media_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     sent_at: Mapped[datetime] = mapped_column(
-        TIMESTAMP, default=datetime.utcnow, nullable=False, index=True
+        TIMESTAMP, default=lambda: datetime.now(UTC).replace(tzinfo=None), nullable=False, index=True
     )
     delivered_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
     read_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP, nullable=True)
